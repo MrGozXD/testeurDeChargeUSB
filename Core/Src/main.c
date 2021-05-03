@@ -43,7 +43,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc1; // tension
+
+ADC_HandleTypeDef hadc2; //courant
 
 I2C_HandleTypeDef hi2c1;
 
@@ -265,6 +267,22 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+  hadc2.Instance                   = ADC2;
+  hadc2.Init.ClockPrescaler        = ADC_CLOCK_ASYNC_DIV1;
+  hadc2.Init.Resolution            = ADC_RESOLUTION_12B;
+  hadc2.Init.ScanConvMode          = DISABLE;                       /* Sequencer disabled (ADC conversion on only 1 channel: channel set on rank 1) */
+  hadc2.Init.ContinuousConvMode    = ENABLE;                        /* Continuous mode disabled to have only 1 conversion at each conversion trig */
+  hadc2.Init.DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because sequencer is disabled */
+  hadc2.Init.NbrOfDiscConversion   = 0;
+  hadc2.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;        /* Conversion start trigged at each external event */
+  hadc2.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+  hadc2.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.NbrOfConversion       = 1;
+  hadc2.Init.DMAContinuousRequests = DISABLE;
+  hadc2.Init.EOCSelection          = DISABLE;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK) {
+    Error_Handler();
+  }
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_5;
@@ -279,6 +297,7 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Regular Channel
   */
+  sConfig.Channel = ADC_CHANNEL_6;
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
