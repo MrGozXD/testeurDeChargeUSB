@@ -87,11 +87,11 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   //char *buffer;
-  uint16_t raw;
+
   float volt;
   float amp;
   float power;
-  float resistance;
+  float resistance=0.01;
   char msg[10];
   uint16_t tab[2];
   /* USER CODE END 1 */
