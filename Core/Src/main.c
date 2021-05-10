@@ -163,19 +163,19 @@ int main(void)
     ssd1306_WriteString(msg, Font_7x10, White);
     ssd1306_UpdateScreen();
     sprintf(msg, "A:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
-    ssd1306_SetCursor(10,0);                       	// Placer sur la ligne de son choix
+    ssd1306_SetCursor(0,12);                       	// Placer sur la ligne de son choix
     ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
     ssd1306_UpdateScreen();
     sprintf(msg,"%0.3f",amp);
-    ssd1306_SetCursor(30,0);
+    ssd1306_SetCursor(30,12);
     ssd1306_WriteString(msg, Font_7x10, White);
     ssd1306_UpdateScreen();
     sprintf(msg, "P:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
-    ssd1306_SetCursor(10,0);                       	// Placer sur la ligne de son choix
+    ssd1306_SetCursor(0,24);                       	// Placer sur la ligne de son choix
     ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
     ssd1306_UpdateScreen();
     sprintf(msg,"%0.3f",power);
-    ssd1306_SetCursor(30,0);
+    ssd1306_SetCursor(30,24);
     ssd1306_WriteString(msg, Font_7x10, White);
     ssd1306_UpdateScreen();
 
