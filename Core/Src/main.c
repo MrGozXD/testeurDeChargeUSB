@@ -140,13 +140,6 @@ int main(void)
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 
     // Get ADC value
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-    raw = HAL_ADC_GetValue(&hadc1);
-    volt= raw;
-    volt= volt*(3.3/4095);
-
-    // Get ADC value
 
     HAL_ADC_Start_DMA(&hadc1, tab, 2);
     volt=tab[0]*(3.3/4095);
