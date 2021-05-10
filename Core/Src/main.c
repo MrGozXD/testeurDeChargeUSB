@@ -43,9 +43,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1; // tension
-
-ADC_HandleTypeDef hadc2; //	courant
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -59,39 +58,14 @@ UART_HandleTypeDef huart2;
 /*uint8_t TxData[8];
 uint8_t RxData[8];
 uint32_t TxMailbox;*/
-void ADC_Select_CH0 (void)
-{
-	ADC_ChannelConfTypeDef sConfig = {0};
-	  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-	  */
-	  sConfig.Channel = ADC_CHANNEL_5;
-	  sConfig.Rank = 1;
-	  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
-	  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-}
 
-void ADC_Select_CH1 (void)
-{
-	ADC_ChannelConfTypeDef sConfig = {0};
-	  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-	  */
-	  sConfig.Channel = ADC_CHANNEL_6;
-	  sConfig.Rank = 1;
-	  sConfig.SamplingTime = ADC_SAMPLETIME_84CYCLES;
-	  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-}
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_ADC1_Init(void);
@@ -115,7 +89,11 @@ int main(void)
   //char *buffer;
   uint16_t raw;
   float volt;
+  float amp;
+  float power;
+  float resistance;
   char msg[10];
+  uint16_t tab[2];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -136,6 +114,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_ADC1_Init();
@@ -143,7 +122,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //CAN_Config();
   HAL_Delay(2000);
-
+  HAL_TIM_Base_Start(&htim2);
   /* Ecran */
   ssd1306_Init();
   ssd1306_Fill(Black); // White pour mettre un fond blanc
@@ -165,26 +144,52 @@ int main(void)
     HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
     raw = HAL_ADC_GetValue(&hadc1);
     volt= raw;
-    volt=volt*(3.3/4095);
+    volt= volt*(3.3/4095);
+
+    // Get ADC value
+
+    HAL_ADC_Start_DMA(&hadc1, tab, 2);
+    volt=tab[0]*(3.3/4095);
+    amp=tab[1]*(3.3/4095)*resistance;
+    power=volt*amp;
 
     // Test: Set GPIO pin low
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 
-    // Convert to string and print
-    //sprintf(msg, "%hu\r\n", raw);
-    //HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
 
     // Pretend we have to do something else for a while
     //HAL_Delay(1);
     // Affichage des données
-    sprintf(msg, "Tension (V):");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
+    sprintf(msg, "V:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
     ssd1306_SetCursor(0,0);                       	// Placer sur la ligne de son choix
-    ssd1306_WriteString(msg, Font_11x18, White); 	// Choisir la taille et la couleur de la police
+    ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
     ssd1306_UpdateScreen();
     sprintf(msg,"%0.3f",volt);
-    ssd1306_SetCursor(0,30);
-    ssd1306_WriteString(msg, Font_11x18, White);
+    ssd1306_SetCursor(30,0);
+    ssd1306_WriteString(msg, Font_7x10, White);
     ssd1306_UpdateScreen();
+    sprintf(msg, "A:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
+    ssd1306_SetCursor(10,0);                       	// Placer sur la ligne de son choix
+    ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
+    ssd1306_UpdateScreen();
+    sprintf(msg,"%0.3f",amp);
+    ssd1306_SetCursor(30,0);
+    ssd1306_WriteString(msg, Font_7x10, White);
+    ssd1306_UpdateScreen();
+    sprintf(msg, "P:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
+    ssd1306_SetCursor(10,0);                       	// Placer sur la ligne de son choix
+    ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
+    ssd1306_UpdateScreen();
+    sprintf(msg,"%0.3f",power);
+    ssd1306_SetCursor(30,0);
+    ssd1306_WriteString(msg, Font_7x10, White);
+    ssd1306_UpdateScreen();
+
+
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -276,25 +281,44 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = ENABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.NbrOfConversion = 2;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIG_T2_TRGO;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc1.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
   }
-
   /** Configure Regular Channel
   */
-
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_12CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
@@ -380,7 +404,7 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
@@ -424,6 +448,22 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
