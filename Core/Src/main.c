@@ -143,7 +143,7 @@ int main(void)
 
     HAL_ADC_Start_DMA(&hadc1, tab, 2);
     volt=tab[0]*(3.3/4095);
-    amp=tab[1]*(3.3/4095)/resistance;
+    amp=(tab[1]*(3.3/4095))/resistance;
     power=volt*amp;
 
     // Test: Set GPIO pin low
