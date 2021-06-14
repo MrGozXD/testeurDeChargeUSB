@@ -193,4 +193,3 @@ NVIC.DMA1_Channel1_IRQn=true\:0\:0\:false\:false\:true\:false\:true
 RCC.APB1Freq_Value=80000000
 ProjectManager.DeviceId=STM32L432KCUx
 ProjectManager.LibraryCopy=1
-isbadioc=false

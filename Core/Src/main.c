@@ -91,7 +91,7 @@ int main(void)
   float volt;
   float amp;
   float power;
-  float resistance=0.01;
+  float resistance=0.01; //resistance de mesure de courant en ohm
   char msg[10];
   uint16_t tab[2];
   /* USER CODE END 1 */
@@ -139,10 +139,10 @@ int main(void)
     // Test: Set GPIO pin high
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 
-    // Get ADC value
+    // CAN
 
     HAL_ADC_Start_DMA(&hadc1, tab, 2);
-    volt=tab[0]*(3.3/4095);
+    volt=tab[0]*(3.3/4095);             //resolution du CAN : 12bits
     amp=(tab[1]*(3.3/4095))/resistance;
     power=volt*amp;
 
@@ -150,28 +150,26 @@ int main(void)
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 
 
-
-    // Pretend we have to do something else for a while
     //HAL_Delay(1);
     // Affichage des données
-    sprintf(msg, "V:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
-    ssd1306_SetCursor(0,0);                       	// Placer sur la ligne de son choix
+    sprintf(msg, "V:");     
+    ssd1306_SetCursor(0,0);                       	// 1ère ligne de l'écran
     ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
     ssd1306_UpdateScreen();
     sprintf(msg,"%0.3f",volt);
     ssd1306_SetCursor(30,0);
     ssd1306_WriteString(msg, Font_7x10, White);
     ssd1306_UpdateScreen();
-    sprintf(msg, "A:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
-    ssd1306_SetCursor(0,12);                       	// Placer sur la ligne de son choix
+    sprintf(msg, "A:");    
+    ssd1306_SetCursor(0,12);                       	// 2ème ligne de l'écran
     ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
     ssd1306_UpdateScreen();
     sprintf(msg,"%0.3f",amp);
     ssd1306_SetCursor(30,12);
     ssd1306_WriteString(msg, Font_7x10, White);
     ssd1306_UpdateScreen();
-    sprintf(msg, "P:");     // %hu = unsigned short int. Si tu utilises RxData[0] au lieu de raw, remplacer 0 par le numéro de l'octet qui contient l'information à afficher
-    ssd1306_SetCursor(0,24);                       	// Placer sur la ligne de son choix
+    sprintf(msg, "P:");    
+    ssd1306_SetCursor(0,24);                       	// 3ème ligne de l'écran
     ssd1306_WriteString(msg, Font_7x10, White); 	// Choisir la taille et la couleur de la police
     ssd1306_UpdateScreen();
     sprintf(msg,"%0.3f",power);
