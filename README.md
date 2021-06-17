@@ -9,6 +9,6 @@ Comment le réaliser chez vous :
 
 - Ouvrez le projet Test dans STM32Cube, si besoin changez la configuration des PINs
 
-- Téleversez le code dans votre carte
+- Uploadez le code dans votre carte
 
 - Enjoy
